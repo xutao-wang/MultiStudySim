@@ -244,6 +244,14 @@ get_boxplot <- function(output){
 ## Base case ###
 k <- 10
 nk <- rep(500,10)
+nk_100 <- rep(100,10)
+nk_150 <- rep(150,10)
+nk_200 <- rep(200,10)
+nk_250 <- rep(250,10)
+nk_300 <- rep(300,10)
+nk_350 <- rep(350,10)
+nk_400 <- rep(400,10)
+nk_450 <- rep(450,10)
 p <- 10
 
 SIG <- diag(x=1,nrow = p,ncol = p)
@@ -271,10 +279,17 @@ mu_beta_1.1 <- matrix(rep(get_sep_unif(2,3,-3,-2),m),nrow = m,ncol=p,byrow=T);mu
 
 sigma_beta_1.1 <- matrix(rep(0,m*p),nrow = m,ncol=p,byrow = T)
 
-#train_1.1 <- MultiStudySim(k,nk,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1)
 test_1.1 <- unlist(lapply(1:10,function(x) MultiStudySim(k,nk,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1)),recursive=F)
 
-dat_input <- lapply(1:50,function(x) MultiStudySim(k,nk,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+#dat_input_50 <- lapply(1:50,function(x) MultiStudySim(k,nk_50,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_100 <- lapply(1:50,function(x) MultiStudySim(k,nk_100,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_150 <- lapply(1:50,function(x) MultiStudySim(k,nk_150,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_200 <- lapply(1:50,function(x) MultiStudySim(k,nk_200,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_250 <- lapply(1:50,function(x) MultiStudySim(k,nk_250,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_300 <- lapply(1:50,function(x) MultiStudySim(k,nk_300,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_350 <- lapply(1:50,function(x) MultiStudySim(k,nk_350,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_400 <- lapply(1:50,function(x) MultiStudySim(k,nk_400,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
+dat_input_450 <- lapply(1:50,function(x) MultiStudySim(k,nk_450,p,m,mu_x,SIG,pii,mu_beta_1.1,sigma_beta_1.1))
 ## Do parallel ##
 library(snow)
 library(snowfall)
@@ -283,57 +298,84 @@ sfInit( parallel=TRUE, cpus=12 )
 sfLibrary(MASS)
 sfLibrary(MCMCpack)
 sfLibrary(caret)
-sfLibrary(readxl)
 sfLibrary(monmlp)
 sfExportAll( )
 
-case_base <- sfLapply(1:length(dat_input),function(x) get_rmse(get_input_dat(dat_input[[x]])[[1]],
-                                              get_input_dat(dat_input[[x]])[[2]],
-                                              lapply(test_1.1, '[[',1)))
-case_base <- readRDS('~/Desktop/master_project/base_case/case_base.RDS')
-p1.1 <- get_boxplot(case_base)
+#case_50 <- sfLapply(1,function(x) get_rmse(get_input_dat(dat_input_50[[x]])[[1]],
+#                                              get_input_dat(dat_input_50[[x]])[[2]],
+#                                              lapply(test_1.1, '[[',1)))
+# Too small
+case_100 <- sfLapply(1:length(dat_input_100),function(x) get_rmse(get_input_dat(dat_input_100[[x]])[[1]],
+                                                             get_input_dat(dat_input_100[[x]])[[2]],
+                                                             lapply(test_1.1, '[[',1)))
+case_150 <- sfLapply(1:length(dat_input_150),function(x) get_rmse(get_input_dat(dat_input_150[[x]])[[1]],
+                                                             get_input_dat(dat_input_150[[x]])[[2]],
+                                                             lapply(test_1.1, '[[',1)))
+case_200 <- sfLapply(1:length(dat_input_200),function(x) get_rmse(get_input_dat(dat_input_200[[x]])[[1]],
+                                                             get_input_dat(dat_input_200[[x]])[[2]],
+                                                             lapply(test_1.1, '[[',1)))
+case_250 <- sfLapply(1:length(dat_input_200),function(x) get_rmse(get_input_dat(dat_input_250[[x]])[[1]],
+                                                                  get_input_dat(dat_input_250[[x]])[[2]],
+                                                                  lapply(test_1.1, '[[',1)))
+case_300 <- sfLapply(1:length(dat_input_200),function(x) get_rmse(get_input_dat(dat_input_300[[x]])[[1]],
+                                                                  get_input_dat(dat_input_300[[x]])[[2]],
+                                                                  lapply(test_1.1, '[[',1)))
+case_350 <- sfLapply(1:length(dat_input_200),function(x) get_rmse(get_input_dat(dat_input_350[[x]])[[1]],
+                                                                  get_input_dat(dat_input_350[[x]])[[2]],
+                                                                  lapply(test_1.1, '[[',1)))
+case_400 <- sfLapply(1:length(dat_input_200),function(x) get_rmse(get_input_dat(dat_input_400[[x]])[[1]],
+                                                                  get_input_dat(dat_input_400[[x]])[[2]],
+                                                                  lapply(test_1.1, '[[',1)))
+case_450 <- sfLapply(1:length(dat_input_200),function(x) get_rmse(get_input_dat(dat_input_450[[x]])[[1]],
+                                                                  get_input_dat(dat_input_450[[x]])[[2]],
+                                                                  lapply(test_1.1, '[[',1)))
 
-p1.1 <- p1.1 + ggtitle("Similar mu_beta, small sigma_beta") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF','yellow'))
-p1.1
+case_100 <- readRDS('~/Desktop/master_project/base_case/case_100.RDS')
+case_150 <- readRDS('~/Desktop/master_project/base_case/case_150.RDS')
+case_200 <- readRDS('~/Desktop/master_project/base_case/case_200.RDS')
+case_250 <- readRDS('~/Desktop/master_project/base_case/case_250.RDS')
+case_300 <- readRDS('~/Desktop/master_project/base_case/case_300.RDS')
+case_350 <- readRDS('~/Desktop/master_project/base_case/case_350.RDS')
+case_400 <- readRDS('~/Desktop/master_project/base_case/case_400.RDS')
+case_450 <- readRDS('~/Desktop/master_project/base_case/case_450.RDS')
+case_500 <- readRDS('~/Desktop/master_project/base_case/case_500.RDS')
 
-get_boxplot_2 <- function(output){
-  #tt_elnet <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',1)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'elnet')
-  #tt_nnet <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',2)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'Nnet')
-  tt_boost <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',3)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'boost')
-  tt_rf <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',4)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'rf')
-  colnames(tt_boost)=colnames(tt_rf)
-  plotting <- data.frame(rbind(tt_boost,tt_rf))
-  colnames(plotting)[3] <- 'Learners'
-  plotting$measurement <- as.numeric(plotting$measurement)
-  plotting$measurement <- log(plotting$measurement)
-  re <- ggplot(data = plotting, aes(x=Learners, y=measurement,fill=condition)) + geom_boxplot()+ xlab("Learners") + ylab("log(RMSE)")
-  return(re)
-}
-get_boxplot_3 <- function(output){
-  tt_elnet <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',1)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'elnet')
-  tt_nnet <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',2)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'Nnet')
-  #tt_boost <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',3)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'boost')
-  #tt_rf <- cbind(tidyr::gather(data.frame(do.call(rbind,lapply(output,'[[',4)))[,-c(5:7)], condition, measurement, stacking:merge, factor_key=TRUE),'rf')
-  colnames(tt_elnet)=colnames(tt_nnet)
-  plotting <- data.frame(rbind(tt_elnet,tt_nnet))
-  colnames(plotting)[3] <- 'Learners'
-  plotting$measurement <- as.numeric(plotting$measurement)
-  plotting$measurement <- log(plotting$measurement)
-  re <- ggplot(data = plotting, aes(x=Learners, y=measurement,fill=condition)) + geom_boxplot()+ xlab("Learners") + ylab("log(RMSE)")
-  return(re)
-}
+p100 <- get_boxplot(case_100)
+p100 <- p100 + ggtitle("Same mu_beta 0 sigma_beta size 100") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
 
-p1 <- get_boxplot(case_base)
-p1 <- p1 + ggtitle("Same mu_beta, 0 sigma_beta") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF','yellow'))
+p150 <- get_boxplot(case_150)
+p150 <- p150 + ggtitle("Same mu_beta 0 sigma_beta size 150") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
 
-p2 <- get_boxplot_2(case_base)
-p2 <- p2 + ggtitle("Same mu_beta, 0 sigma_beta") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF','yellow'))
+p200 <- get_boxplot(case_200)
+p200 <- p200 + ggtitle("Same mu_beta 0 sigma_beta size 200") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
 
-p3 <- get_boxplot_3(case_base)
-p3 <- p3 + ggtitle("Same mu_beta, 0 sigma_beta") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF','yellow'))
+p250 <- get_boxplot(case_250)
+p250 <- p250 + ggtitle("Same mu_beta 0 sigma_beta size 250") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
+
+p300 <- get_boxplot(case_300)
+p300 <- p300 + ggtitle("Same mu_beta 0 sigma_beta size 300") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
+
+p350 <- get_boxplot(case_350)
+p350 <- p350 + ggtitle("Same mu_beta 0 sigma_beta size 350") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
+
+p400 <- get_boxplot(case_400)
+p400 <- p400 + ggtitle("Same mu_beta 0 sigma_beta size 400") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
+
+p450 <- get_boxplot(case_450)
+p450 <- p450 + ggtitle("Same mu_beta 0 sigma_beta size 450") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
+
+p500 <- get_boxplot(case_500)
+p500 <- p500 + ggtitle("Same mu_beta 0 sigma_beta size 500") + scale_fill_manual(values=c("#F8766D",'#C77CFF' ,'#00BA38', '#619CFF'))
 
 library(grid)
-library(gridExtra)
-grid.arrange(p1,p2,p3,ncol=2,top=textGrob("Same mu_x",gp=gpar(fontsize=20,font=3)))
+grid.arrange(p100,p150,p200,p250,ncol=2,top=textGrob("Same mu_x size 100-250",gp=gpar(fontsize=20,font=3)))
+grid.arrange(p300,p350,p400,p450,p500,ncol=2,top=textGrob("Same mu_x size 300-500",gp=gpar(fontsize=20,font=3)))
+#saveRDS(case_100, file = "~/MultiSim/result/case_100.rds")
+#saveRDS(case_150, file = "~/MultiSim/result/case_150.rds")
+#saveRDS(case_200, file = "~/MultiSim/result/case_200.rds")
+#saveRDS(case_250, file = "~/MultiSim/result/case_250.rds")
+#saveRDS(case_300, file = "~/MultiSim/result/case_300.rds")
+#saveRDS(case_350, file = "~/MultiSim/result/case_350.rds")
+#saveRDS(case_400, file = "~/MultiSim/result/case_400.rds")
+#saveRDS(case_450, file = "~/MultiSim/result/case_450.rds")
 
-saveRDS(case_base, file = "~/MultiSim/result/case_base.rds")
