@@ -1,0 +1,30 @@
+Loading required package: coda
+##
+## Markov Chain Monte Carlo Package (MCMCpack)
+## Copyright (C) 2003-2019 Andrew D. Martin, Kevin M. Quinn, and Jong Hee Park
+##
+## Support provided by the U.S. National Science Foundation
+## (Grants SES-0350646 and SES-0350613)
+##
+Loading required package: lattice
+Loading required package: ggplot2
+Loading required package: optimx
+snowfall 1.84-6.1 initialized (using snow 0.4-3): parallel execution on 18 CPUs.
+
+Warning message:
+In searchCommandline(parallel, cpus = cpus, type = type, socketHosts = socketHosts,  :
+  Unknown option on commandline: --file
+Library MASS loaded in cluster.
+
+Library MCMCpack loaded in cluster.
+
+Library caret loaded in cluster.
+
+Library monmlp loaded in cluster.
+
+Library glmnet loaded in cluster.
+
+Loading required package: Matrix
+Loading required package: foreach
+Loaded glmnet 2.0-16
+
