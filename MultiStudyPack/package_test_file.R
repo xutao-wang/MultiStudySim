@@ -14,6 +14,11 @@ b <- get_input_data(lst_ori)[[2]]
 test <- lapply(MultiStudySim(k,nk,p,m,mu_x,SIG,pii,mu_beta,sigma_beta),'[[',1)
 l <- 'glmnet'
 nk_train <- nk
-result_1 <- method_class_all(a,b,t,l)
+result_1 <- method_class_all(a,b,test,'glmnet')
 
-result_2 <- method_class_all(a,b,t,l,nk_train)
+result_2 <- method_class_all(a,b,test,'glmnet',nk_train)
+
+
+result_4 <- method_class_all(a,b,test,'nnet')
+
+
