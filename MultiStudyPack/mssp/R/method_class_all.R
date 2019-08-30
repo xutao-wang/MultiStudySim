@@ -157,9 +157,9 @@ method_class_all <- function(lst,dat_train,dat_test,learner,nk_train){
 
     fit <- lapply(lst, function(lst) monmlp::monmlp.fit(x = as.matrix(lst[,names(lst)!='y']), y = as.matrix(lst$y), hidden1 = 2, hidden2 = 2,
                                                         bag = TRUE, iter.max = 500, iter.stopped = 10))
-    pred_train <- lapply(fit, function(x) monmlp.predict(as.matrix(dat_train[,-which(names(dat_train) %in% c('y'))]),x))
+    pred_train <- lapply(fit, function(x) monmlp::monmlp.predict(as.matrix(dat_train[,-which(names(dat_train) %in% c('y'))]),x))
     pred_test <- lapply(1:length(dat_test),function(x)
-      lapply(1:length(fit), function(y)  monmlp.predict(as.matrix(dat_test[[x]][,names(dat_test[[x]])!='y']),fit[[y]])) )
+      lapply(1:length(fit), function(y)  monmlp::monmlp.predict(as.matrix(dat_test[[x]][,names(dat_test[[x]])!='y']),fit[[y]])) )
 
     pred_avg <- lapply(1:length(pred_test), function(x) simp_avg(pred_test[[x]]))
 
