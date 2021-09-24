@@ -16,7 +16,7 @@ library(monmlp)
 # Beta - m*p matrix of coefficient means
 # sigma - m*p matrix of coefficient variance
 # pi - m*1 vector of mxing probability
-# sigma_error - noise term 
+# sigma_error - noise term
 #### Output:
 # List of k
 # Each list with y_k,X_k,beta_k,C_k
@@ -24,16 +24,16 @@ library(monmlp)
 
 
 MultiStudySim <- function(k,nk,p,m,mu_x,SIG,pii,mu_beta,sigma_beta){
-  x_vec_list <- lapply(1:k,function(x) mvrnorm(n = nk[x], mu_x[x,], SIG)) 
+  x_vec_list <- lapply(1:k,function(x) mvrnorm(n = nk[x], mu_x[x,], SIG))
   Ck <- sample(1:m,k,replace = T,prob=pii)
-  beta_vec_list <- lapply(1:k,function(z) apply(matrix(c(1:p),nrow=p,ncol=1),1,function(x) 
+  beta_vec_list <- lapply(1:k,function(z) apply(matrix(c(1:p),nrow=p,ncol=1),1,function(x)
     rnorm(1,mu_beta[Ck[z],x],sigma_beta[Ck[z],x])))
-  output_Y_list <- lapply(1:k,function(x) 
+  output_Y_list <- lapply(1:k,function(x)
     x_vec_list[[x]]%*%beta_vec_list[[x]] + rnorm(nrow(x_vec_list[[x]]),0,1))
-  
+
   final_data <- lapply(1:k,function(x) list(SimulatedOutput=data.frame(x_vec_list[[x]],y=output_Y_list[[x]],row.names = c(1:nrow(output_Y_list[[x]]))),
                                             BetaValue=beta_vec_list[[x]],Ck=Ck[x]))
-  
+
   names(final_data) <- paste0('Study',c(1:k))
   return(final_data)
 }
@@ -57,13 +57,12 @@ simp_avg <- function(list1,dat_test){
 #}
 
 stack_weight_combine <- function(pred_train,dat_train){
-  stack_train_x <- as.matrix.data.frame(do.call(cbind,pred_train))  
-  #  stack_test_x <- as.matrix.data.frame(do.call(cbind,pred_test)) 
-  nl <- nnls::nnls(stack_train_x, dat_train$y) 
+  stack_train_x <- as.matrix.data.frame(do.call(cbind,pred_train))
+  #  stack_test_x <- as.matrix.data.frame(do.call(cbind,pred_test))
+  nl <- nnls::nnls(stack_train_x, dat_train$y)
   #  pred <- stack_test_x%*%coef(nl)
   #  pred_norm <- stack_test_x%*%(coef(nl)/sum(coef(nl)))
   return (coef(nl))
-  
 }
 
 stack_weight_wz <- function(pred_train,dat_train){
@@ -79,32 +78,32 @@ elnet_class_all <- function(lst,dat_train,dat_test){
   # List: generate from multiStudySim
   # dat_train: one large dataframe (unlist List)
   # dat_testL List of another new data
-  
+
   con <- caret::trainControl(method = 'cv',number=5,allowParallel = T)
   fit <- lapply(lst,function(lst) caret::train(y~., data=lst, method = "glmnet",trControl=con,preProc = c("center", "scale")))
-  insamp_rmse_list <- lapply(1:length(fit),function(x) 
+  insamp_rmse_list <- lapply(1:length(fit),function(x)
     Metrics::rmse(predict(fit[[x]],lst[[x]][,-which(names(lst[[x]]) %in% c('y'))]),lst[[x]]$y))
-  
+
   fitM <- caret::train(y~., data=dat_train, method = "glmnet",trControl=con,preProc = c("center", "scale"))
-  
+
   pred_train <- lapply(fit, function(fit) predict(fit,dat_train[,-which(names(dat_train) %in% c('y'))]))
   pred_test <- lapply(1:length(dat_test),function(x) predict(fit,dat_test[[x]][,-which(names(dat_test[[x]]) %in% c('y'))]  ))
-  
+
   nl <- stack_weight_combine(pred_train,dat_train)
   nl_norm <- nl/sum(nl)
   nl_with_zero <- stack_weight_wz(pred_train,dat_train)
   stacking_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl,dat_test[[x]]$y))
   stacking_norm_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_norm,dat_test[[x]]$y))
-  
+
   simp_avg_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(simp_avg(pred_test[[x]],dat_test[[x]]),dat_test[[x]]$y))
-  
+
   nl_wz <- stack_weight_wz(pred_train,dat_train)
   stacking_wz_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_wz,dat_test[[x]]$y))
   stacking_wz_rmse_mean <- mean(unlist(stacking_wz_rmse_list))
-  
+
   predM <- lapply(dat_test,function(dat_test) predict(fitM,as.matrix(dat_test[,-which(names(dat_test) %in% c('y'))])))
   merge_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(predM[[x]],dat_test[[x]]$y))
-  
+
   stacking_rmse_mean <- mean(unlist(stacking_rmse_list))
   simp_avg_rmse_mean <- mean(unlist(simp_avg_rmse_list))
   merge_rmse_mean <- mean(unlist(merge_rmse_list))
@@ -126,34 +125,34 @@ elnet_class_all <- function(lst,dat_train,dat_test){
 
 
 nnet_class_all <- function(lst,dat_train,dat_test){
-  
+
   fit <- lapply(lst, function(lst) monmlp::monmlp.fit(x = as.matrix(lst[,names(lst)!='y']), y = as.matrix(lst$y), hidden1 = 2, hidden2 = 2,
                                                       bag = TRUE, iter.max = 500, iter.stopped = 10))
-  insamp_rmse_list <- lapply(1:length(fit),function(x) 
+  insamp_rmse_list <- lapply(1:length(fit),function(x)
     Metrics::rmse(monmlp.predict(as.matrix(lst[[x]][,names(lst[[x]])!='y']), fit[[x]]),lst[[x]]$y))
-  
+
   fitM <- monmlp::monmlp.fit(x = as.matrix(dat_train[,names(dat_train)!='y']), y = as.matrix(dat_train$y), hidden1 = 2, hidden2 = 2,
                              bag = TRUE, iter.max = 500, iter.stopped = 10)
-  
+
   pred_train <- lapply(fit, function(x) monmlp.predict(as.matrix(dat_train[,-which(names(dat_train) %in% c('y'))]),x))
-  pred_test <- lapply(1:length(dat_test),function(x)  
+  pred_test <- lapply(1:length(dat_test),function(x)
     lapply(1:length(fit), function(y)  monmlp.predict(as.matrix(dat_test[[x]][,names(dat_test[[x]])!='y']),fit[[y]])) )
-  
+
   nl <- stack_weight_combine(pred_train,dat_train)
   nl_norm <- nl/sum(nl)
   stacking_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl,dat_test[[x]]$y))
   stacking_norm_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_norm,dat_test[[x]]$y))
-  
+
   simp_avg_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(simp_avg(pred_test[[x]],dat_test[[x]]),dat_test[[x]]$y))
-  
+
   nl_wz <- stack_weight_wz(pred_train,dat_train)
   stacking_wz_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_wz,dat_test[[x]]$y))
   stacking_wz_rmse_mean <- mean(unlist(stacking_wz_rmse_list))
-  
+
   predM <- lapply(dat_test,function(dat_test) monmlp.predict(as.matrix(dat_test[,-which(names(dat_test) %in% c('y'))]),fitM))
   merge_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(predM[[x]],dat_test[[x]]$y))
-  
-  
+
+
   stacking_rmse_mean <- mean(unlist(stacking_rmse_list))
   simp_avg_rmse_mean <- mean(unlist(simp_avg_rmse_list))
   merge_rmse_mean <- mean(unlist(merge_rmse_list))
@@ -161,36 +160,36 @@ nnet_class_all <- function(lst,dat_train,dat_test){
   insamp_rmse_mean <- mean(unlist(insamp_rmse_list))
   return(list(stacking=stacking_rmse_mean,stacking_norm=stacking_norm_rmse_mean,stacking_wz=stacking_wz_rmse_mean,
               simp_avg=simp_avg_rmse_mean,merge=merge_rmse_mean,insamp_avg=insamp_rmse_mean,
-              nl_coef=nl,nl_coef_norm=nl_norm,nl_coef_wz=nl_wz))  
+              nl_coef=nl,nl_coef_norm=nl_norm,nl_coef_wz=nl_wz))
 }
 
 boost_class_all <- function(lst,dat_train,dat_test){
   con <- caret::trainControl(method = 'cv',number=5,allowParallel=T)
   fit <- lapply(lst,function(lst) caret::train(y~., data=lst, method = "gbm",trControl=con,preProc = c("center", "scale")))
-  insamp_rmse_list <- lapply(1:length(fit),function(x) 
+  insamp_rmse_list <- lapply(1:length(fit),function(x)
     Metrics::rmse(predict(fit[[x]],lst[[x]][,-which(names(lst[[x]]) %in% c('y'))]),lst[[x]]$y))
-  
+
   fitM <- caret::train(y~.,data=dat_train, method = "gbm",trControl=con,preProc = c("center", "scale"))
-  
+
   pred_train <- lapply(fit, function(fit) predict(fit,dat_train[,-which(names(dat_train) %in% c('y'))]))
   pred_test <- lapply(1:length(dat_test),function(x) predict(fit,dat_test[[x]][,-which(names(dat_test[[x]]) %in% c('y'))]  ))
-  
-  
+
+
   nl <- stack_weight_combine(pred_train,dat_train)
   nl_norm <- nl/sum(nl)
   stacking_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl,dat_test[[x]]$y))
   stacking_norm_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_norm,dat_test[[x]]$y))
-  
+
   nl_wz <- stack_weight_wz(pred_train,dat_train)
   stacking_wz_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_wz,dat_test[[x]]$y))
   stacking_wz_rmse_mean <- mean(unlist(stacking_wz_rmse_list))
-  
+
   simp_avg_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(simp_avg(pred_test[[x]],dat_test[[x]]),dat_test[[x]]$y))
-  
-  
+
+
   predM <- lapply(dat_test,function(dat_test) predict(fitM,as.matrix(dat_test[,-which(names(dat_test) %in% c('y'))])))
   merge_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(predM[[x]],dat_test[[x]]$y))
-  
+
   stacking_rmse_mean <- mean(unlist(stacking_rmse_list))
   simp_avg_rmse_mean <- mean(unlist(simp_avg_rmse_list))
   merge_rmse_mean <- mean(unlist(merge_rmse_list))
@@ -204,38 +203,38 @@ boost_class_all <- function(lst,dat_train,dat_test){
 rf_class_all <- function(lst,dat_train,dat_test){
   con <- caret::trainControl(method = 'cv',number=5,allowParallel=T)
   fit <- lapply(lst,function(lst) caret::train(y~., data=lst, method = "ranger",trControl=con,preProc = c("center", "scale")))
-  insamp_rmse_list <- lapply(1:length(fit),function(x) 
+  insamp_rmse_list <- lapply(1:length(fit),function(x)
     Metrics::rmse(predict(fit[[x]],lst[[x]][,-which(names(lst[[x]]) %in% c('y'))]),lst[[x]]$y))
-  
+
   fitM <- caret::train(y~., data=dat_train,method = "ranger",trControl=con,preProc = c("center", "scale"))
-  
+
   pred_train <- lapply(fit, function(fit) predict(fit,dat_train[,-which(names(dat_train) %in% c('y'))]))
   pred_test <- lapply(1:length(dat_test),function(x) predict(fit,dat_test[[x]][,-which(names(dat_test[[x]]) %in% c('y'))]  ))
-  
+
   nl <- stack_weight_combine(pred_train,dat_train)
   nl_norm <- nl/sum(nl)
   stacking_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl,dat_test[[x]]$y))
   stacking_norm_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_norm,dat_test[[x]]$y))
-  
+
   nl_wz <- stack_weight_wz(pred_train,dat_train)
   stacking_wz_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(as.matrix.data.frame(do.call(cbind,pred_test[[x]])) %*%nl_wz,dat_test[[x]]$y))
   stacking_wz_rmse_mean <- mean(unlist(stacking_wz_rmse_list))
-  
+
   simp_avg_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(simp_avg(pred_test[[x]],dat_test[[x]]),dat_test[[x]]$y))
-  
-  
+
+
   predM <- lapply(dat_test,function(dat_test) predict(fitM,as.matrix(dat_test[,-which(names(dat_test) %in% c('y'))])))
   merge_rmse_list <- lapply(1:length(dat_test), function(x) Metrics::rmse(predM[[x]],dat_test[[x]]$y))
-  
+
   stacking_rmse_mean <- mean(unlist(stacking_rmse_list))
   simp_avg_rmse_mean <- mean(unlist(simp_avg_rmse_list))
   merge_rmse_mean <- mean(unlist(merge_rmse_list))
-  
+
   stacking_norm_rmse_mean <- mean(unlist(stacking_norm_rmse_list))
   insamp_rmse_mean <- mean(unlist(insamp_rmse_list))
   return(list(stacking=stacking_rmse_mean,stacking_norm=stacking_norm_rmse_mean,stacking_wz=stacking_wz_rmse_mean,
               simp_avg=simp_avg_rmse_mean,merge=merge_rmse_mean,insamp_avg=insamp_rmse_mean,
-              nl_coef=nl,nl_coef_norm=nl_norm,nl_coef_wz=nl_wz))  
+              nl_coef=nl,nl_coef_norm=nl_norm,nl_coef_wz=nl_wz))
 }
 get_input_dat <- function(list){
   maindat <- lapply(list,'[[',1)
